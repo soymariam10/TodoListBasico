@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 using Todo.Models;
 
 namespace Todo.Controllers;
@@ -23,9 +24,23 @@ public class HomeController : Controller
         return View();
     }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public RedirectResult Insert(TodoItem todo)
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        using (SqliteConnection con =
+            new("DatacSource=db.sqlite"))
+        {
+            using var tableCmd = con.CreateCommand();
+            con.Open();
+            tableCmd.CommandText = $"INSERT INTO todo (name) VALUES ('{todo.Name}')";
+            try
+            {
+                tableCmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        return Redirect("https://localhost:7094");
     }
 }
